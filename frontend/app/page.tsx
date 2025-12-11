@@ -13,7 +13,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/campaigns")
+      .get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/campaigns`)
       .then((res) => setCampaigns(res.data))
       .catch((err) => console.log(err));
   }, [setCampaigns]);
