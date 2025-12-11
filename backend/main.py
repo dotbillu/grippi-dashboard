@@ -1,26 +1,24 @@
 import os
 import random
 from typing import List
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# 1. Load Environment Variables (Database URL)
 load_dotenv()
+
+# Database Setup
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 if not DATABASE_URL:
-    print("⚠️ WARNING: DATABASE_URL not found in .env file!")
+    print("WARNING: DATABASE_URL not found in .env file")
 
-# 2. Database Setup
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 3. SQLAlchemy Model (Matches your Database Table)
 class CampaignDB(Base):
     __tablename__ = "campaigns"
 
@@ -30,14 +28,11 @@ class CampaignDB(Base):
     clicks = Column(Integer)
     cost = Column(Float)
     impressions = Column(Integer)
-    color = Column(String)  # We store the hex color here
+    color = Column(String)
 
-# Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
-# 4. Pydantic Models (Validation for Request/Response)
-
-# Model for CREATING a campaign (What the Frontend sends)
+# Pydantic Models
 class CampaignCreate(BaseModel):
     name: str
     status: str
@@ -45,7 +40,6 @@ class CampaignCreate(BaseModel):
     cost: float
     impressions: int
 
-# Model for READING a campaign (What the Backend sends back)
 class CampaignResponse(BaseModel):
     id: int
     name: str
@@ -56,16 +50,19 @@ class CampaignResponse(BaseModel):
     color: str
 
     class Config:
-        from_attributes = True # Allows Pydantic to read SQLAlchemy objects
+        from_attributes = True
 
-# 5. FastAPI App Setup
 app = FastAPI()
 
-# Allow your Next.js frontend to talk to this backend
+# CORS
+frontend_url = os.getenv("FRONTEND_URL")
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000"
 ]
+
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,7 +72,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -83,25 +79,20 @@ def get_db():
     finally:
         db.close()
 
-# --- ENDPOINTS ---
-
+# Endpoints
 @app.get("/")
 def read_root():
-    return {"message": "Grippi Campaign API is running!"}
+    return {"message": "Grippi Campaign API is running"}
 
-# GET: Fetch all campaigns
 @app.get("/campaigns", response_model=List[CampaignResponse])
 def get_campaigns(db: Session = Depends(get_db)):
     return db.query(CampaignDB).all()
 
-# POST: Create a new campaign (Connected to your Modal)
 @app.post("/campaigns", response_model=CampaignResponse)
 def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
-    # 1. Pick a random color for the graph line
     graph_colors = ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#8b5cf6", "#0891b2"]
     selected_color = random.choice(graph_colors)
 
-    # 2. Create the DB Object
     new_campaign = CampaignDB(
         name=campaign.name,
         status=campaign.status,
@@ -111,7 +102,6 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
         color=selected_color
     )
 
-    # 3. Save to NeonDB
     db.add(new_campaign)
     db.commit()
     db.refresh(new_campaign)

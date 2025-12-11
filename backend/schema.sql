@@ -1,4 +1,4 @@
--- 1. Create the Table
+-- Create the Table
 CREATE TABLE IF NOT EXISTS campaigns (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
