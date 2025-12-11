@@ -32,7 +32,7 @@ import {
 } from "recharts";
 import { GripVertical, Plus, X } from "lucide-react";
 
-type TrendPoint = { name: string } & Record<string, number>;
+type TrendPoint = { name: string; [key: string]: number | string };
 
 function SortableCard({
   id,
