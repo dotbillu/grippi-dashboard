@@ -5,8 +5,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { campaignsAtom, darkModeAtom } from "./atoms";
 
 import Navbar from "./components/navbar";
-import DashboardOverview from "./components/dashboardOverview";
-import CampaignsSection from "./components/campaignsSection";
+import DashboardGrid from "./components/dashboardGrid";
 
 export default function Dashboard() {
   const [, setCampaigns] = useAtom(campaignsAtom);
@@ -26,8 +25,7 @@ export default function Dashboard() {
       <div className="max-w-[1600px] mx-auto">
         <Navbar />
         <div className="grid grid-cols-1 gap-6">
-          <DashboardOverview />
-          <CampaignsSection />
+          <DashboardGrid />
         </div>
       </div>
     </div>
