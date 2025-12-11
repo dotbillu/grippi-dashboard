@@ -34,7 +34,6 @@ import { GripVertical, Plus, X } from "lucide-react";
 
 type TrendPoint = { name: string } & Record<string, number>;
 
-
 function SortableCard({
   id,
   children,
@@ -44,8 +43,14 @@ function SortableCard({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
   const transformString = transform
     ? CSS.Transform.toString({ ...transform, scaleX: 1, scaleY: 1 })
     : undefined;
@@ -80,8 +85,12 @@ function MetricsCard({
   const metrics = useMemo(() => {
     const totalCost = campaigns.reduce((acc, c) => acc + c.cost, 0);
     const totalClicks = campaigns.reduce((acc, c) => acc + c.clicks, 0);
-    const totalImpressions = campaigns.reduce((acc, c) => acc + c.impressions, 0);
-    const avgCost = totalClicks > 0 ? (totalCost / totalClicks).toFixed(2) : "0.00";
+    const totalImpressions = campaigns.reduce(
+      (acc, c) => acc + c.impressions,
+      0,
+    );
+    const avgCost =
+      totalClicks > 0 ? (totalCost / totalClicks).toFixed(2) : "0.00";
 
     return {
       cost: {
@@ -112,7 +121,7 @@ function MetricsCard({
   }, [campaigns]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
   return (
@@ -135,7 +144,11 @@ function MetricsCard({
           onDragEnd={({ active, over }) => {
             if (over && active.id !== over.id) {
               setOrder((items) =>
-                arrayMove(items, items.indexOf(active.id as string), items.indexOf(over.id as string))
+                arrayMove(
+                  items,
+                  items.indexOf(active.id as string),
+                  items.indexOf(over.id as string),
+                ),
               );
             }
           }}
@@ -186,35 +199,47 @@ function TrendCard({
   campaigns: ReturnType<typeof useAtomValue<typeof campaignsAtom>>;
   darkMode: boolean;
 }) {
-  const trendData: TrendPoint[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-    (day) => {
-      const dayData: TrendPoint = { name: day };
-      campaigns.forEach((c) => {
-        const seed = c.id * (day.charCodeAt(0) + c.clicks);
-        const randomVariance = (seed % 50) - 25;
-        dayData[c.name] = Math.max(0, Math.floor(c.clicks / 7 + randomVariance));
-      });
-      return dayData;
-    }
-  );
+  const trendData: TrendPoint[] = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun",
+  ].map((day) => {
+    const dayData: TrendPoint = { name: day };
+    campaigns.forEach((c) => {
+      const seed = c.id * (day.charCodeAt(0) + c.clicks);
+      const randomVariance = (seed % 50) - 25;
+      dayData[c.name] = Math.max(0, Math.floor(c.clicks / 7 + randomVariance));
+    });
+    return dayData;
+  });
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div
           className={`p-3 rounded-xl shadow-xl border text-xs ${
-            darkMode ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600"
+            darkMode
+              ? "bg-zinc-900 border-zinc-800 text-zinc-300"
+              : "bg-white border-zinc-200 text-zinc-600"
           }`}
         >
-          <p className="font-bold mb-2 text-sm border-b pb-1 border-dashed opacity-50">{label}</p>
+          <p className="font-bold mb-2 text-sm border-b pb-1 border-dashed opacity-50">
+            {label}
+          </p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
-              <span 
-                className="w-2 h-2 rounded-full" 
+              <span
+                className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: entry.stroke }}
               ></span>
               <span className="font-medium">{entry.name}:</span>
-              <span className={`font-bold ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+              <span
+                className={`font-bold ${darkMode ? "text-white" : "text-zinc-900"}`}
+              >
                 {entry.value}
               </span>
             </div>
@@ -252,7 +277,13 @@ function TrendCard({
               tickLine={false}
               tick={{ fill: "#71717a", fontSize: 12 }}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: darkMode ? "#52525b" : "#d4d4d8", strokeWidth: 1 }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: darkMode ? "#52525b" : "#d4d4d8",
+                strokeWidth: 1,
+              }}
+            />
             {campaigns.map((c) => (
               <Line
                 key={c.id}
@@ -303,7 +334,10 @@ function DistributionCard({
               stroke="none"
             >
               {pieData.map((_, i) => (
-                <Cell key={i} fill={COLORS[(i + colorOffset) % COLORS.length]} />
+                <Cell
+                  key={i}
+                  fill={COLORS[(i + colorOffset) % COLORS.length]}
+                />
               ))}
             </Pie>
             <Tooltip />
@@ -351,9 +385,7 @@ function TableCard({
   const [filter, setFilter] = useState("All");
 
   const filteredCampaigns =
-    filter === "All"
-      ? campaigns
-      : campaigns.filter((c) => c.status === filter);
+    filter === "All" ? campaigns : campaigns.filter((c) => c.status === filter);
 
   return (
     <div
@@ -452,9 +484,21 @@ function CampaignModal({
   isOpen: boolean;
   closeModal: () => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
-  form: { name: string; status: string; clicks: number; cost: number; impressions: number };
+  form: {
+    name: string;
+    status: string;
+    clicks: number;
+    cost: number;
+    impressions: number;
+  };
   setForm: React.Dispatch<
-    React.SetStateAction<{ name: string; status: string; clicks: number; cost: number; impressions: number }>
+    React.SetStateAction<{
+      name: string;
+      status: string;
+      clicks: number;
+      cost: number;
+      impressions: number;
+    }>
   >;
   darkMode: boolean;
 }) {
@@ -468,7 +512,9 @@ function CampaignModal({
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
       <div
         className={`p-6 rounded-xl w-full max-w-md shadow-2xl ${
-          darkMode ? "bg-zinc-900 border border-zinc-800 text-white" : "bg-white text-zinc-800"
+          darkMode
+            ? "bg-zinc-900 border border-zinc-800 text-white"
+            : "bg-white text-zinc-800"
         }`}
       >
         <div className="flex justify-between items-center mb-6">
@@ -479,7 +525,9 @@ function CampaignModal({
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold uppercase opacity-50 mb-1">Name</label>
+            <label className="block text-xs font-bold uppercase opacity-50 mb-1">
+              Name
+            </label>
             <input
               required
               className={inputClass}
@@ -489,7 +537,9 @@ function CampaignModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase opacity-50 mb-1">Status</label>
+              <label className="block text-xs font-bold uppercase opacity-50 mb-1">
+                Status
+              </label>
               <select
                 className={inputClass}
                 value={form.status}
@@ -500,7 +550,9 @@ function CampaignModal({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase opacity-50 mb-1">Cost</label>
+              <label className="block text-xs font-bold uppercase opacity-50 mb-1">
+                Cost
+              </label>
               <input
                 type="number"
                 required
@@ -515,7 +567,9 @@ function CampaignModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase opacity-50 mb-1">Clicks</label>
+              <label className="block text-xs font-bold uppercase opacity-50 mb-1">
+                Clicks
+              </label>
               <input
                 type="number"
                 required
@@ -528,7 +582,9 @@ function CampaignModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase opacity-50 mb-1">Impressions</label>
+              <label className="block text-xs font-bold uppercase opacity-50 mb-1">
+                Impressions
+              </label>
               <input
                 type="number"
                 required
@@ -558,11 +614,16 @@ export default function DashboardGrid() {
   const darkMode = useAtomValue(darkModeAtom);
   const [isOpen, setIsOpen] = useAtom(modalOpenAtom);
   const setCampaigns = useSetAtom(campaignsAtom);
-  const [order, setOrder] = useState(["metrics", "trend", "table", "distribution"]);
+  const [order, setOrder] = useState([
+    "metrics",
+    "trend",
+    "table",
+    "distribution",
+  ]);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
   const [form, setForm] = useState({
@@ -576,7 +637,10 @@ export default function DashboardGrid() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post("http://127.0.0.1:8000/campaigns", form);
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/campaigns`,
+        form,
+      );
       setCampaigns((prev) => [...prev, data]);
       setIsOpen(false);
       setForm({
@@ -598,7 +662,9 @@ export default function DashboardGrid() {
   const renderOverlay = (cardId: string | null) => {
     if (!cardId) return null;
     const wide = cardId === "trend" || cardId === "table";
-    const wrapperClass = wide ? "w-[640px] max-w-[90vw]" : "w-[360px] max-w-[90vw]";
+    const wrapperClass = wide
+      ? "w-[640px] max-w-[90vw]"
+      : "w-[360px] max-w-[90vw]";
     if (cardId === "metrics") {
       return (
         <div className={wrapperClass}>
@@ -636,7 +702,11 @@ export default function DashboardGrid() {
         onDragEnd={({ active, over }) => {
           if (over && active.id !== over.id) {
             setOrder((items) =>
-              arrayMove(items, items.indexOf(active.id as string), items.indexOf(over.id as string))
+              arrayMove(
+                items,
+                items.indexOf(active.id as string),
+                items.indexOf(over.id as string),
+              ),
             );
           }
           setActiveId(null);
@@ -675,10 +745,7 @@ export default function DashboardGrid() {
                     key="table"
                     className="col-span-12 lg:col-span-8"
                   >
-                    <TableCard
-                      campaigns={campaigns}
-                      darkMode={darkMode}
-                    />
+                    <TableCard campaigns={campaigns} darkMode={darkMode} />
                   </SortableCard>
                 );
               }
@@ -694,7 +761,9 @@ export default function DashboardGrid() {
             })}
           </div>
         </SortableContext>
-        <DragOverlay dropAnimation={null}>{renderOverlay(activeId)}</DragOverlay>
+        <DragOverlay dropAnimation={null}>
+          {renderOverlay(activeId)}
+        </DragOverlay>
       </DndContext>
       <CampaignModal
         isOpen={isOpen}
